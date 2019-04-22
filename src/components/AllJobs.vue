@@ -1,31 +1,44 @@
 <template>
     <div id="searchComponent">
-        <!-- <v-text-field label="Search jobs..." solo @keyup="searchJob" v-model="query">{{ query }}</v-text-field> -->
-        
         <v-layout row wrap>
             <v-flex xs6>
-                <v-data-table v-if="jobs" :headers="headers" :items="jobs" class="elevation-1" :disable-initial-sort="true" :rows-per-page-items="[5, 10, 25, { text: '$vuetify.dataIterator.rowsPerPageAll', value: -1}]">
-                    <template v-slot:items="props">
-                        <tr :class="{ grey: props.item.id == activeJob }" @click="getFacts(props.item)">
-                            <td>{{ props.item.owner }}</td>
-                            <td>{{ props.item.patient }}</td>
-                            <td v-if="props.item.status == 'DONE'" class="green--text"><strong>{{ props.item.status }}</strong></td>
-                            <td v-else>{{ props.item.status }}</td>
-                            <td>{{ props.item.created }}</td>
-                            <td>{{ props.item.updated }}</td>
-                            <td><v-btn fab small outline color="black" :to="'/facts/'+props.item.id" @click="getFacts(props.item)"><v-icon dark>fas fa-angle-double-right</v-icon></v-btn></td>
-                        </tr>
-                    </template>
-                </v-data-table>
+                <v-card>
+                    <v-card-title>
+                        JOBS
+                        <v-spacer></v-spacer>
+                        <v-text-field v-model="searchJob" append-icon="search" label="Search" single-line hide-details></v-text-field>
+                    </v-card-title>
+                    <v-data-table v-if="jobs" :headers="headers" :items="jobs" :search="searchJob" class="elevation-1" :disable-initial-sort="true" :rows-per-page-items="[5, 10, 25, { text: '$vuetify.dataIterator.rowsPerPageAll', value: -1}]">
+                        <template v-slot:items="props">
+                            <tr :class="{ grey: props.item.id == activeJob }" @click="getFacts(props.item)">
+                                <td>{{ props.item.owner }}</td>
+                                <td>{{ props.item.patient }}</td>
+                                <td v-if="props.item.status == 'DONE'" class="green--text"><strong>{{ props.item.status }}</strong></td>
+                                <td v-else>{{ props.item.status }}</td>
+                                <td class="px-1">{{ props.item.created }}</td>
+                                <td class="px-1">{{ props.item.updated }}</td>
+                                <td><v-btn fab small outline color="black" :to="'/facts/'+props.item.id" @click="getFacts(props.item)"><v-icon dark>fas fa-angle-double-right</v-icon></v-btn></td>
+                            </tr>
+                        </template>
+                    </v-data-table>
+                </v-card>
             </v-flex>
-            <v-flex xs6>
-                <v-data-table v-if="facts[0]" :headers="factsHeaders" :items="facts" class="elevation-1" :disable-initial-sort="true" :rows-per-page-items="[5, 10, 25, { text: '$vuetify.dataIterator.rowsPerPageAll', value: -1}]">
-                    <template v-slot:items="props">
-                        <td>{{ props.item.conjunction }}</td>
-                        <td>{{ props.item.head }}</td>
-                        <td>{{ props.item.grfIrf.grf }}, {{ props.item.grfIrf.irf }}</td>
-                    </template>
-                </v-data-table>
+            <v-flex xs6 v-if="facts[0]">
+                <v-card>
+                    <v-card-title>
+                        Facts
+                        <v-spacer></v-spacer>
+                        <v-text-field v-model="searchFacts" append-icon="search" label="Search" single-line hide-details></v-text-field>
+                    </v-card-title>
+                    <v-data-table :headers="factsHeaders" :items="facts" :search="searchFacts" class="elevation-1" :disable-initial-sort="true" :rows-per-page-items="[5, 10, 25, { text: '$vuetify.dataIterator.rowsPerPageAll', value: -1}]">
+                        <template v-slot:items="props">
+                            <td>{{ props.item.conjunction }}</td>
+                            <td>{{ props.item.head }}</td>
+                            <td>{{ props.item.grfIrf.grf }}</td>
+                            <td>{{ props.item.grfIrf.irf }}</td>
+                        </template>
+                    </v-data-table>
+                </v-card>
             </v-flex>
         </v-layout>
     </div>
@@ -40,7 +53,8 @@ export default Vue.extend({
   name: 'AllJobs',
   data: () => {
       return {
-          query: '',
+          searchJob: null,
+          searchFacts: '',
           headers: [
               { text: 'Owner', align: 'left', sortable: true, value: 'owner' },
               { text: 'Patient', align: 'left', sortable: true, value: 'patient' },
@@ -51,8 +65,9 @@ export default Vue.extend({
           ],
           factsHeaders: [
               { text: 'Conjunction', align: 'left', sortable: true, value: 'conjunction' },
-              { text: 'head', align: 'left', sortable: true, value: 'head' },
-              { text: 'grfIrf', align: 'left', sortable: false, value: 'grfIrf' },
+              { text: 'Head', align: 'left', sortable: true, value: 'head' },
+              { text: 'grf', align: 'left', sortable: true, value: 'grfIrf.grf' },
+              { text: 'irf', align: 'left', sortable: true, value: 'grfIrf.irf' },
           ],
           jobs: null,
           facts: { id: '' },
@@ -81,9 +96,6 @@ export default Vue.extend({
     getFacts(item) {
         this.activeJob = item.id;
         this.facts = item.facts;
-    },
-    searchJob() {
-        // TODO: Implement
     },
   },
   mounted() {
